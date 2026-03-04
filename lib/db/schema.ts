@@ -77,6 +77,55 @@ export const member = sqliteTable("member", {
 	index("member_user_id_idx").on(table.userId),
 ]);
 
+export const role = sqliteTable("role", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull(),
+	description: text("description"),
+	organizationId: text("organization_id")
+		.references(() => organization.id, { onDelete: "cascade" }),
+	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+	updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+}, (table) => [
+	index("role_organization_id_idx").on(table.organizationId),
+	index("role_name_organization_id_unique_idx").on(table.name, table.organizationId),
+]);
+
+export const permission = sqliteTable("permission", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull().unique(),
+	description: text("description"),
+	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+	updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+export const rolePermission = sqliteTable("role_permission", {
+	id: text("id").primaryKey(),
+	roleId: text("role_id")
+		.notNull()
+		.references(() => role.id, { onDelete: "cascade" }),
+	permissionId: text("permission_id")
+		.notNull()
+		.references(() => permission.id, { onDelete: "cascade" }),
+	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+}, (table) => [
+	index("role_permission_role_id_idx").on(table.roleId),
+	index("role_permission_permission_id_idx").on(table.permissionId),
+]);
+
+export const memberRole = sqliteTable("member_role", {
+	id: text("id").primaryKey(),
+	memberId: text("member_id")
+		.notNull()
+		.references(() => member.id, { onDelete: "cascade" }),
+	roleId: text("role_id")
+		.notNull()
+		.references(() => role.id, { onDelete: "cascade" }),
+	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+}, (table) => [
+	index("member_role_member_id_idx").on(table.memberId),
+	index("member_role_role_id_idx").on(table.roleId),
+]);
+
 export const invitation = sqliteTable("invitation", {
 	id: text("id").primaryKey(),
 	organizationId: text("organization_id")
@@ -118,9 +167,10 @@ export const accountRelations = relations(account, ({ one }) => ({
 export const organizationRelations = relations(organization, ({ many }) => ({
 	members: many(member),
 	invitations: many(invitation),
+	roles: many(role),
 }));
 
-export const memberRelations = relations(member, ({ one }) => ({
+export const memberRelations = relations(member, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [member.organizationId],
 		references: [organization.id],
@@ -128,6 +178,42 @@ export const memberRelations = relations(member, ({ one }) => ({
 	user: one(user, {
 		fields: [member.userId],
 		references: [user.id],
+	}),
+	roles: many(memberRole),
+}));
+
+export const roleRelations = relations(role, ({ many, one }) => ({
+	permissions: many(rolePermission),
+	members: many(memberRole),
+	organization: one(organization, {
+		fields: [role.organizationId],
+		references: [organization.id],
+	}),
+}));
+
+export const permissionRelations = relations(permission, ({ many }) => ({
+	roles: many(rolePermission),
+}));
+
+export const rolePermissionRelations = relations(rolePermission, ({ one }) => ({
+	role: one(role, {
+		fields: [rolePermission.roleId],
+		references: [role.id],
+	}),
+	permission: one(permission, {
+		fields: [rolePermission.permissionId],
+		references: [permission.id],
+	}),
+}));
+
+export const memberRoleRelations = relations(memberRole, ({ one }) => ({
+	member: one(member, {
+		fields: [memberRole.memberId],
+		references: [member.id],
+	}),
+	role: one(role, {
+		fields: [memberRole.roleId],
+		references: [role.id],
 	}),
 }));
 
