@@ -5,6 +5,7 @@ import { InviteUserDialog } from "@/components/admin/invite-user-dialog";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
+import { getMemberPermissions } from "@/lib/rbac";
 
 export default async function AdminUsersPage() {
     const users = await getOrganizationUsers();
@@ -15,6 +16,7 @@ export default async function AdminUsersPage() {
 
     const orgId = session?.session.activeOrganizationId;
     let currentUserRole = "user";
+    let permissions: string[] = [];
 
     if (orgId && session?.user.id) {
         const member = await db.query.member.findFirst({
@@ -24,6 +26,25 @@ export default async function AdminUsersPage() {
             ),
         });
         currentUserRole = member?.role || "user";
+        permissions = await getMemberPermissions(session.user.id, orgId);
+    }
+
+    const canInvite = permissions.includes("user.create");
+    const canRead = permissions.includes("user.read");
+
+    if (!canRead) {
+        return (
+            <div className="container mx-auto py-10">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Unauthorized</CardTitle>
+                        <CardDescription>
+                            You do not have permission to view the user directory.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        );
     }
 
     return (
@@ -35,7 +56,7 @@ export default async function AdminUsersPage() {
                         Manage and view all users within your organization.
                     </p>
                 </div>
-                {currentUserRole !== "user" && (
+                {canInvite && (
                     <InviteUserDialog currentUserRole={currentUserRole} />
                 )}
             </div>
@@ -48,7 +69,7 @@ export default async function AdminUsersPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <UserTable data={users} currentUserRole={currentUserRole} />
+                    <UserTable data={users} currentUserRole={currentUserRole} permissions={permissions} />
                 </CardContent>
             </Card>
         </div>

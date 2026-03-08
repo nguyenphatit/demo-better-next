@@ -6,6 +6,7 @@ import { member, user } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { getMemberPermissions } from "@/lib/rbac";
 
 async function getSessionAndOrg() {
     const session = await auth.api.getSession({
@@ -29,21 +30,16 @@ async function getSessionAndOrg() {
         throw new Error("Forbidden: Not a member of this organization");
     }
 
-    return { session, orgId, currentMember };
+    const permissions = await getMemberPermissions(session.user.id, orgId);
+
+    return { session, orgId, currentMember, permissions };
 }
 
 export async function getOrganizationUsers() {
-    const { orgId, currentMember } = await getSessionAndOrg();
+    const { orgId, permissions } = await getSessionAndOrg();
 
-    // Any member can potentially view the list, but we might want to restrict it
-    // Requirements say: User: Read-only access or restricted view.
-    // The previous implementation required admin/owner. Let's keep it somewhat restricted
-    // but allow managers to see it too.
-
-    if (currentMember.role === "user") {
-        // Restricted view: maybe only show their own?
-        // But it's an "Admin User Management" console.
-        // Usually, 'user' shouldn't even be here.
+    if (!permissions.includes("user.read")) {
+        throw new Error("Forbidden: Insufficient permissions");
     }
 
     const users = await db.select({
@@ -65,10 +61,9 @@ export async function getOrganizationUsers() {
 }
 
 export async function inviteUser(email: string, role: string) {
-    const { session, orgId, currentMember } = await getSessionAndOrg();
+    const { orgId, currentMember, permissions } = await getSessionAndOrg();
 
-    // Only admin/owner/manager can invite
-    if (currentMember.role === "user") {
+    if (!permissions.includes("user.create")) {
         throw new Error("Forbidden: Insufficient permissions");
     }
 
@@ -94,9 +89,9 @@ export async function inviteUser(email: string, role: string) {
 }
 
 export async function updateMemberRole(memberUserId: string, newRole: string) {
-    const { session, orgId, currentMember } = await getSessionAndOrg();
+    const { orgId, currentMember, permissions } = await getSessionAndOrg();
 
-    if (currentMember.role === "user") {
+    if (!permissions.includes("user.update")) {
         throw new Error("Forbidden: Insufficient permissions");
     }
 
@@ -143,9 +138,9 @@ export async function updateMemberRole(memberUserId: string, newRole: string) {
 }
 
 export async function removeMember(memberUserId: string) {
-    const { session, orgId, currentMember } = await getSessionAndOrg();
+    const { session, orgId, currentMember, permissions } = await getSessionAndOrg();
 
-    if (currentMember.role === "user") {
+    if (!permissions.includes("user.delete")) {
         throw new Error("Forbidden: Insufficient permissions");
     }
 

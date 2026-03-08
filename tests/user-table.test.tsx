@@ -48,4 +48,20 @@ describe("UserTable", () => {
     render(<UserTable data={[]} />);
     expect(screen.getByText("No results.")).toBeInTheDocument();
   });
+
+  it("hides actions when permissions are missing", () => {
+    const { queryByRole } = render(
+      <UserTable data={mockData} currentUserRole="admin" permissions={[]} />
+    );
+    // The "Open menu" button should not be present
+    expect(queryByRole("button", { name: /open menu/i })).not.toBeInTheDocument();
+  });
+
+  it("shows actions when permissions are present", () => {
+    const { getAllByRole } = render(
+      <UserTable data={mockData} currentUserRole="admin" permissions={["user.update"]} />
+    );
+    // There are 2 users in mockData, both should have the actions menu since admin is higher role
+    expect(getAllByRole("button", { name: /open menu/i })).toHaveLength(2);
+  });
 });

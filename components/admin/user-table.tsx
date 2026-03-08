@@ -56,9 +56,10 @@ interface User {
 interface UserTableProps {
   data: User[];
   currentUserRole?: string;
+  permissions?: string[];
 }
 
-export function UserTable({ data, currentUserRole }: UserTableProps) {
+export function UserTable({ data, currentUserRole, permissions = [] }: UserTableProps) {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [newRole, setNewRole] = useState<string>("");
@@ -126,11 +127,14 @@ export function UserTable({ data, currentUserRole }: UserTableProps) {
       cell: ({ row }) => {
         const user = row.original;
 
-        // Basic check if current user can manage this user
-        const canManage = currentUserRole === "admin" || currentUserRole === "owner" ||
-                         (currentUserRole === "manager" && user.role === "user");
+        const canUpdate = permissions.includes("user.update");
+        const canDelete = permissions.includes("user.delete");
 
-        if (!canManage) return null;
+        // Hierarchy check still applies (e.g., manager can only edit 'user')
+        const isHigherRole = currentUserRole === "admin" || currentUserRole === "owner";
+        const canManageUser = isHigherRole || (currentUserRole === "manager" && user.role === "user");
+
+        if (!canManageUser || (!canUpdate && !canDelete)) return null;
 
         return (
           <DropdownMenu>
@@ -142,23 +146,29 @@ export function UserTable({ data, currentUserRole }: UserTableProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingUser(user);
-                  setNewRole(user.role);
-                }}
-              >
-                <UserCog className="mr-2 h-4 w-4" />
-                Change Role
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-red-600"
-                onClick={() => setDeletingUser(user)}
-              >
-                <UserMinus className="mr-2 h-4 w-4" />
-                Remove User
-              </DropdownMenuItem>
+              {canUpdate && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingUser(user);
+                    setNewRole(user.role);
+                  }}
+                >
+                  <UserCog className="mr-2 h-4 w-4" />
+                  Change Role
+                </DropdownMenuItem>
+              )}
+              {canDelete && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-red-600"
+                    onClick={() => setDeletingUser(user)}
+                  >
+                    <UserMinus className="mr-2 h-4 w-4" />
+                    Remove User
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
