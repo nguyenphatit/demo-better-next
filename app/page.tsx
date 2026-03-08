@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -14,8 +12,7 @@ import { ArrowRight, Shield, Zap, Users, Globe } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
+    <>
       <main className="flex-1">
         {/* Hero Section */}
         <section className="container space-y-6 py-24 md:py-32 lg:py-48 text-center">
@@ -119,7 +116,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <Footer />
-    </div>
+    </>
   );
 }
