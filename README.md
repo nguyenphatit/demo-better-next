@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Demo Better Next
 
-## Getting Started
+A modern Next.js starter template featuring robust authentication, multi-tenancy, and a dynamic Role-Based Access Control (RBAC) system.
 
-First, run the development server:
+## 🚀 Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+This project demonstrates a sophisticated integration of [Better Auth](https://www.better-auth.com/) with [Next.js](https://nextjs.org/) and [Drizzle ORM](https://orm.drizzle.team/), providing a solid foundation for SaaS applications that require organizational isolation and granular permission management.
+
+## 🛠 Tech Stack
+
+- **Framework:** [Next.js 15+](https://nextjs.org/) (App Router, React 19)
+- **Auth:** [Better Auth](https://www.better-auth.com/) with Organization plugin
+- **Database:** SQLite via [@libsql/client](https://github.com/tursodatabase/libsql-client-ts)
+- **ORM:** [Drizzle ORM](https://orm.drizzle.team/)
+- **UI Components:** [Shadcn UI](https://ui.shadcn.com/) (Radix UI)
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
+- **Form Handling:** [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
+- **Testing:** [Vitest](https://vitest.dev/)
+
+## ✨ Key Features
+
+- **Authentication:** Secure email/password login powered by Better Auth.
+- **Multi-tenancy:** Built-in support for organizations, members, and invitations.
+- **Dynamic RBAC:** A custom RBAC system that extends Better Auth's base roles with granular permissions.
+- **Organization Isolation:** Middleware-enforced organization selection and isolation.
+- **Admin Console:** User management interface for managing organization members and their roles.
+- **Responsive Design:** Fully responsive UI with dark mode support.
+
+## 🚦 Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- [pnpm](https://pnpm.io/) (recommended)
+
+### Installation
+
+1. Clone the repository.
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+
+### Environment Setup
+
+Create a `.env` file in the root directory and add the following:
+
+```env
+BETTER_AUTH_SECRET=your_secret_here
+BETTER_AUTH_URL=http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Database Initialization
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Sync the database schema:
+   ```bash
+   pnpm exec drizzle-kit push
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Seed the RBAC roles and permissions:
+   ```bash
+   pnpm exec tsx lib/db/seed-rbac.ts
+   ```
 
-## Learn More
+### Running the App
 
-To learn more about Next.js, take a look at the following resources:
+Start the development server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The application will be available at `http://localhost:3000`.
 
-## Deploy on Vercel
+## 🔐 RBAC System
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The project implements a layered RBAC system:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Better Auth Roles:** Uses the standard `Admin`, `Member` roles from Better Auth.
+2. **Custom Permissions:** Granular permissions (e.g., `user.create`, `user.update`, `org.update`) are stored in the `permission` table.
+3. **Role-Permission Mapping:** Roles are associated with specific permissions via the `role_permission` table.
+4. **Member Roles:** Members can be assigned multiple roles, which are aggregated to resolve their effective permissions.
+
+Default seeded roles:
+- **Admin:** Full access to all features and organization settings.
+- **Manager:** Can manage users and view organization data.
+- **User:** Read-only access to organization data.
+
+## 📂 Project Structure
+
+- `app/`: Next.js App Router routes and server actions.
+- `components/`: React components, including Shadcn UI primitives.
+- `lib/`: Core utilities, including auth configuration, database schema, and RBAC logic.
+- `drizzle/`: Database migrations and configuration.
+- `tests/`: Vitest test suites.
+
+## 📜 Scripts
+
+- `pnpm dev`: Runs the app in development mode.
+- `pnpm build`: Builds the app for production.
+- `pnpm start`: Starts the production server.
+- `pnpm lint`: Runs ESLint for code quality checks.
+- `pnpm test`: Runs the test suite using Vitest.
+
+## 🧪 Testing
+
+The project uses Vitest for unit and integration testing. Run tests with:
+
+```bash
+pnpm test
+```
