@@ -1,0 +1,51 @@
+import { render, screen } from "@testing-library/react";
+import { UserTable } from "@/components/admin/user-table";
+import { describe, it, expect, vi } from "vitest";
+
+const mockData = [
+  {
+    id: "1",
+    name: "John Doe",
+    email: "john@example.com",
+    role: "admin",
+    status: "Active",
+  },
+  {
+    id: "2",
+    name: "Jane Smith",
+    email: "jane@example.com",
+    role: "member",
+    status: "Pending",
+  },
+];
+
+describe("UserTable", () => {
+  it("renders the table with correct headers", () => {
+    render(<UserTable data={mockData} />);
+    expect(screen.getByText("Display Name")).toBeInTheDocument();
+    expect(screen.getByText("Email")).toBeInTheDocument();
+    expect(screen.getByText("Role")).toBeInTheDocument();
+    expect(screen.getByText("Status")).toBeInTheDocument();
+  });
+
+  it("renders user data correctly", () => {
+    render(<UserTable data={mockData} />);
+    expect(screen.getByText("John Doe")).toBeInTheDocument();
+    expect(screen.getByText("john@example.com")).toBeInTheDocument();
+    expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    expect(screen.getByText("jane@example.com")).toBeInTheDocument();
+  });
+
+  it("renders roles and status with badges", () => {
+    render(<UserTable data={mockData} />);
+    const adminBadge = screen.getByText("admin");
+    const activeBadge = screen.getByText("Active");
+    expect(adminBadge).toBeInTheDocument();
+    expect(activeBadge).toBeInTheDocument();
+  });
+
+  it("renders 'No results' when data is empty", () => {
+    render(<UserTable data={[]} />);
+    expect(screen.getByText("No results.")).toBeInTheDocument();
+  });
+});
