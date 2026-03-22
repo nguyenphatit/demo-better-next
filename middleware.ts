@@ -1,18 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 
 export async function middleware(request: NextRequest) {
-	const session = await auth.api.getSession({
-		headers: request.headers,
+	if (request.nextUrl.pathname.startsWith("/api/auth")) {
+		return NextResponse.next();
+	}
+
+	const response = await fetch(new URL("/api/auth/get-session", request.url), {
+		headers: {
+			cookie: request.headers.get("cookie") || "",
+		},
 	});
+	const sessionData = await response.json().catch(() => null);
+	const session = sessionData?.session;
 
-	if (session && !session.session.activeOrganizationId) {
-		const isAuthPage = request.nextUrl.pathname.startsWith("/api/auth") ||
-                           request.nextUrl.pathname.startsWith("/login") ||
-                           request.nextUrl.pathname.startsWith("/register");
+	if (session && !session.activeOrganizationId) {
+		const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
+			request.nextUrl.pathname.startsWith("/register");
 
-        const isOrgPage = request.nextUrl.pathname.startsWith("/create-organization") ||
-                          request.nextUrl.pathname.startsWith("/select-organization");
+		const isOrgPage = request.nextUrl.pathname.startsWith("/create-organization") ||
+			request.nextUrl.pathname.startsWith("/select-organization");
 
 		if (!isAuthPage && !isOrgPage) {
 			return NextResponse.redirect(new URL("/create-organization", request.url));
