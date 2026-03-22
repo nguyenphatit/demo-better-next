@@ -14,8 +14,8 @@ export async function middleware(request: NextRequest) {
 	const session = sessionData?.session;
 
 	if (session && !session.activeOrganizationId) {
-		const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
-			request.nextUrl.pathname.startsWith("/register");
+		const isAuthPage = request.nextUrl.pathname.startsWith("/auth/login") ||
+			request.nextUrl.pathname.startsWith("/auth/register");
 
 		const isOrgPage = request.nextUrl.pathname.startsWith("/create-organization") ||
 			request.nextUrl.pathname.startsWith("/select-organization");
