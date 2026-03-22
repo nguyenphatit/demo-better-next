@@ -48,6 +48,24 @@ export default function RegisterPage() {
       return;
     }
 
+    // Check for pending invitations
+    const { data: invitations } = await authClient.organization.listUserInvitations();
+    if (invitations && invitations.length > 0) {
+      const firstInvitation = invitations[0];
+      const { error: acceptError } = await authClient.organization.acceptInvitation({
+        invitationId: firstInvitation.id,
+      });
+
+      if (!acceptError) {
+        await authClient.organization.setActive({
+          organizationId: firstInvitation.organizationId,
+        });
+        toast.success(`Joined organization: ${firstInvitation.organizationName}`);
+      } else {
+        console.error("Failed to accept invitation:", acceptError);
+      }
+    }
+
     toast.success("Account created successfully!");
     router.push("/");
     router.refresh();
