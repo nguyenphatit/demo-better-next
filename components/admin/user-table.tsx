@@ -130,9 +130,9 @@ export function UserTable({ data, currentUserRole, permissions = [] }: UserTable
         const canUpdate = permissions.includes("user.update");
         const canDelete = permissions.includes("user.delete");
 
-        // Hierarchy check still applies (e.g., manager can only edit 'user')
+        // Hierarchy check still applies (e.g., admin can only edit 'member')
         const isHigherRole = currentUserRole === "admin" || currentUserRole === "owner";
-        const canManageUser = isHigherRole || (currentUserRole === "manager" && user.role === "user");
+        const canManageUser = isHigherRole || (currentUserRole === "admin" && user.role === "member");
 
         if (!canManageUser || (!canUpdate && !canDelete)) return null;
 
@@ -244,10 +244,9 @@ export function UserTable({ data, currentUserRole, permissions = [] }: UserTable
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
                 {(currentUserRole === "admin" || currentUserRole === "owner") && (
                   <>
-                    <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </>
                 )}

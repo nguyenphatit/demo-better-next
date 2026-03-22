@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+export default function CreateOrganizationPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -27,23 +26,27 @@ export default function LoginPage() {
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const name = formData.get("name") as string;
+    const slug = formData.get("slug") as string;
 
-    const { data, error } = await authClient.signIn.email({
-      email,
-      password,
-      callbackURL: "/",
+    const { data, error } = await authClient.organization.create({
+      name,
+      slug,
     });
 
-    setLoading(false);
-
     if (error) {
-      toast.error(error.message || "Failed to log in. Please check your credentials.");
+      setLoading(false);
+      toast.error(error.message || "Failed to create organization. Please try again.");
       return;
     }
 
-    toast.success("Welcome back!");
+    if (data?.id) {
+      await authClient.organization.setActive({ organizationId: data.id });
+    }
+
+    setLoading(false);
+
+    toast.success("Organization created successfully!");
     router.push("/");
     router.refresh();
   }
@@ -52,30 +55,31 @@ export default function LoginPage() {
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
       <Card className="w-full max-w-[400px]">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Sign in</CardTitle>
+          <CardTitle className="text-2xl text-center">Create Organization</CardTitle>
           <CardDescription className="text-center">
-            Enter your email and password to sign in
+            Enter the details for your new organization
           </CardDescription>
         </CardHeader>
         <form onSubmit={onSubmit}>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="name">Organization Name</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="m@example.com"
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Acme Corp"
                 required
                 disabled={loading}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="slug">Organization Slug</Label>
               <Input
-                id="password"
-                name="password"
-                type="password"
+                id="slug"
+                name="slug"
+                type="text"
+                placeholder="acme-corp"
                 required
                 disabled={loading}
               />
@@ -84,17 +88,8 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col gap-4 mt-4">
             <Button className="w-full" type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              Create Organization
             </Button>
-            <div className="text-sm text-center text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/register"
-                className="hover:text-brand underline underline-offset-4"
-              >
-                Sign Up
-              </Link>
-            </div>
           </CardFooter>
         </form>
       </Card>

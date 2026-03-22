@@ -67,24 +67,24 @@ export async function inviteUser(email: string, role: string) {
         throw new Error("Forbidden: Insufficient permissions");
     }
 
-    // Manager can only invite "user" role
-    if (currentMember.role === "manager" && role !== "user") {
-        throw new Error("Forbidden: Managers can only invite users with 'user' role");
+    // Admin can only invite "member" role
+    if (currentMember.role === "admin" && role !== "member") {
+        throw new Error("Forbidden: Admins can only invite users with 'member' role");
     }
 
     try {
-        await auth.api.inviteMember({
+        await auth.api.createInvitation({
             headers: await headers(),
             body: {
                 email,
-                role,
+                role: role as "member" | "admin" | "owner",
                 organizationId: orgId,
             }
         });
         revalidatePath("/admin/users");
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to invite user:", error);
-        throw new Error("Failed to invite user");
+        throw new Error(error.message || "Failed to invite user");
     }
 }
 
@@ -108,13 +108,13 @@ export async function updateMemberRole(memberUserId: string, newRole: string) {
     }
 
     // Hierarchy check:
-    // Manager: Can only edit/manage users with lower roles (e.g., User role).
-    if (currentMember.role === "manager") {
-        if (targetMember.role !== "user") {
-            throw new Error("Forbidden: Managers can only manage users with 'user' role");
+    // Admin: Can only edit/manage users with lower roles (e.g., Member role).
+    if (currentMember.role === "admin") {
+        if (targetMember.role !== "member") {
+            throw new Error("Forbidden: Admins can only manage users with 'member' role");
         }
-        if (newRole !== "user") {
-            throw new Error("Forbidden: Managers can only set role to 'user'");
+        if (newRole !== "member") {
+            throw new Error("Forbidden: Admins can only set role to 'member'");
         }
     }
 
@@ -126,7 +126,7 @@ export async function updateMemberRole(memberUserId: string, newRole: string) {
             headers: await headers(),
             body: {
                 memberId: targetMember.id,
-                role: newRole,
+                role: newRole as "member" | "admin" | "owner",
                 organizationId: orgId,
             }
         });
@@ -156,9 +156,9 @@ export async function removeMember(memberUserId: string) {
     }
 
     // Hierarchy check:
-    if (currentMember.role === "manager") {
-        if (targetMember.role !== "user") {
-            throw new Error("Forbidden: Managers can only remove users with 'user' role");
+    if (currentMember.role === "admin") {
+        if (targetMember.role !== "member") {
+            throw new Error("Forbidden: Admins can only remove users with 'member' role");
         }
     }
 
@@ -171,7 +171,7 @@ export async function removeMember(memberUserId: string) {
         await auth.api.removeMember({
             headers: await headers(),
             body: {
-                memberId: targetMember.id,
+                memberIdOrEmail: targetMember.id,
                 organizationId: orgId,
             }
         });

@@ -38,10 +38,8 @@ export default function RegisterPage() {
       name,
       image: undefined,
       callbackURL: "/",
-      data: {
-        tenantId: uuidv4(),
-      },
-    });
+      tenantId: uuidv4(),
+    } as any);
 
     setLoading(false);
 
@@ -99,7 +97,7 @@ export default function RegisterPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
+          <CardFooter className="flex flex-col gap-4 mt-4">
             <Button className="w-full" type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create account

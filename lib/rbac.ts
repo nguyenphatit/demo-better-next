@@ -23,7 +23,13 @@ export async function getMemberPermissions(userId: string, organizationId: strin
 
     // 1. Get role ID from the role string in member table
     // We match against seeded roles "Admin", "Manager", "User" (case-insensitive)
-    const memberRoleName = currentMember.role.toLowerCase();
+    let memberRoleName = currentMember.role.toLowerCase();
+    
+    if (memberRoleName === "owner") {
+        memberRoleName = "admin";
+    } else if (memberRoleName === "member") {
+        memberRoleName = "user";
+    }
 
     const baseRoles = await db.select({ id: role.id })
         .from(role)

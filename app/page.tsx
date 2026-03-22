@@ -13,7 +13,7 @@ import { ArrowRight, Shield, Zap, Users, Globe } from "lucide-react";
 export default function Home() {
   return (
     <>
-      <main className="flex-1">
+      <main className="flex-1 flex flex-col items-center justify-center">
         {/* Hero Section */}
         <section className="container space-y-6 py-24 md:py-32 lg:py-48 text-center">
           <Badge variant="secondary" className="mb-4">

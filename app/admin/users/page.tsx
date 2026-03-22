@@ -15,7 +15,7 @@ export default async function AdminUsersPage() {
     });
 
     const orgId = session?.session.activeOrganizationId;
-    let currentUserRole = "user";
+    let currentUserRole = "member";
     let permissions: string[] = [];
 
     if (orgId && session?.user.id) {
@@ -25,7 +25,7 @@ export default async function AdminUsersPage() {
                 eq(member.userId, session.user.id)
             ),
         });
-        currentUserRole = member?.role || "user";
+        currentUserRole = member?.role || "member";
         permissions = await getMemberPermissions(session.user.id, orgId);
     }
 

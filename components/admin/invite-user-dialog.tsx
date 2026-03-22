@@ -56,7 +56,7 @@ export function InviteUserDialog({ currentUserRole }: InviteUserDialogProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      role: "user",
+      role: "member",
     },
   });
 
@@ -117,10 +117,9 @@ export function InviteUserDialog({ currentUserRole }: InviteUserDialogProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="member">Member</SelectItem>
                       {(currentUserRole === "admin" || currentUserRole === "owner") && (
                         <>
-                          <SelectItem value="manager">Manager</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
                         </>
                       )}
